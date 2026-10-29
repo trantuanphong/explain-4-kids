@@ -80,11 +80,6 @@
 
             <!-- Mode Switcher & Audio Controls -->
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Dual Mode Toggle Button -->
-                <button onclick="toggleExpertMode()" id="btn-expert-mode" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition flex items-center gap-1.5 shadow">
-                    <span>👶 Chế Độ: Thám Tử Nhi Đồng</span>
-                </button>
-
                 <!-- Audio Toggle Button -->
                 <button onclick="toggleAudio()" id="btn-audio" class="px-3 py-1.5 rounded-xl text-xs px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700">
                     🔊 Âm Thanh: Bật
@@ -138,7 +133,7 @@
                     🎭 4. Mặt Nạ XOR
                 </button>
                 <button onclick="switchTab(5)" id="tab-btn-5" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
-                    📖 5. Truyện Lịch Sử Lớn
+                    📖 5. Truyện Lịch Sử
                 </button>
                 <button onclick="switchTab(6)" id="tab-btn-6" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
                     🎮 6. Trắc Nghiệm & Game
@@ -696,23 +691,6 @@
                     ? "px-3 py-1.5 rounded-xl text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700"
                     : "px-3 py-1.5 rounded-xl text-xs bg-rose-950 text-rose-300 font-bold border border-rose-800";
             }
-        }
-
-        // Dual Mode Toggle Logic (Kids vs Math Expert)
-        let isExpertMode = false;
-        function toggleExpertMode() {
-            sound.playClick();
-            isExpertMode = !isExpertMode;
-            const btn = document.getElementById('btn-expert-mode');
-            if (btn) {
-                btn.innerHTML = isExpertMode 
-                    ? "<span>🎓 Chế Độ: Chuyên Gia STEM</span>"
-                    : "<span>👶 Chế Độ: Thám Tử Nhi Đồng</span>";
-            }
-            setRobotSpeech(isExpertMode 
-                ? "Bé đã mở khóa Chế Độ Chuyên Gia STEM! Cấu trúc ma trận QR mở rộng không giới hạn ký tự và bảng tra cứu chuẩn."
-                : "Tớ đã chuyển về Chế Độ Thám Tử Nhi Đồng với các hình ảnh ẩn dụ sinh động và dễ hiểu!"
-            );
         }
 
         /* ==========================================================================
