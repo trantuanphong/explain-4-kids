@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thám Tử QR - Khám Phá Mật Mã Ô Vuông</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #090d16;
+            color: #f1f5f9;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.6);
+        }
+        .glow-cyan {
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.35);
+        }
+        .glow-amber {
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.35);
+        }
+        .glow-emerald {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        /* Pulse Animation */
+        @keyframes eyeGlow {
+            0%, 100% { filter: drop-shadow(0 0 2px #22d3ee); }
+            50% { filter: drop-shadow(0 0 8px #22d3ee); }
+        }
+        .animate-eye {
+            animation: eyeGlow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden text-slate-100 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+
+    <!-- CANVAS CONFETTI OVERLAY -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- HEADER & DETECTIVE ROBOT GUIDE -->
+    <header class="sticky top-0 z-40 bg-slate-950/90 border-b border-slate-800 backdrop-blur-md px-4 py-3">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-3">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 shrink-0">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-amber-400 p-0.5 shadow-lg flex items-center justify-center shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">
+                        🔍
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black bg-gradient-to-r from-cyan-400 via-amber-300 to-emerald-400 bg-clip-text text-transparent">
+                        THÁM TỬ QR
+                    </h1>
+                    <p class="text-xs font-semibold text-slate-400">Khám Phá Mật Mã Ô Vuông Cho Trẻ Em & Học Sinh STEM</p>
+                </div>
+            </div>
+
+            <!-- Mode Switcher & Audio Controls -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Dual Mode Toggle Button -->
+                <button onclick="toggleExpertMode()" id="btn-expert-mode" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 transition flex items-center gap-1.5 shadow">
+                    <span>👶 Chế Độ: Thám Tử Nhi Đồng</span>
+                </button>
+
+                <!-- Audio Toggle Button -->
+                <button onclick="toggleAudio()" id="btn-audio" class="px-3 py-1.5 rounded-xl text-xs px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700">
+                    🔊 Âm Thanh: Bật
+                </button>
+            </div>
+
+            <!-- Detective Robot Companion Box -->
+            <div class="flex items-center space-x-3 bg-slate-900/90 border border-slate-700/80 px-4 py-2 rounded-2xl max-w-xl w-full lg:w-auto shadow-inner">
+                <!-- Dynamic SVG Robot Avatar -->
+                <div class="w-11 h-11 shrink-0 relative">
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <rect x="15" y="30" width="70" height="55" rx="15" fill="#1e293b" stroke="#38bdf8" stroke-width="4"/>
+                        <line x1="50" y1="30" x2="50" y2="10" stroke="#f59e0b" stroke-width="4"/>
+                        <circle cx="50" cy="8" r="6" fill="#fbbf24" class="animate-ping"/>
+                        <circle cx="50" cy="8" r="6" fill="#f59e0b"/>
+                        <path d="M10 32 C20 15, 80 15, 90 32 Z" fill="#b45309"/>
+                        <rect x="5" y="30" width="90" height="6" rx="3" fill="#d97706"/>
+                        <circle id="bot-eye-l" cx="35" cy="52" r="10" fill="#0284c7" class="animate-eye"/>
+                        <circle id="bot-eye-r" cx="65" cy="52" r="10" fill="#0284c7" class="animate-eye"/>
+                        <circle cx="35" cy="52" r="4" fill="#38bdf8"/>
+                        <circle cx="65" cy="52" r="4" fill="#38bdf8"/>
+                        <path id="bot-mouth" d="M 38 70 Q 50 80 62 70" fill="none" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <!-- Speech Bubble Text -->
+                <div class="flex-1">
+                    <div class="flex items-center justify-between">
+                        <span id="bot-name" class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Rô-bốt Thám Tử QR:</span>
+                    </div>
+                    <p id="bot-speech" class="text-xs text-slate-200 font-medium line-clamp-2 mt-0.5">
+                        Xin chào bé! Tớ là Rô-bốt Thám Tử. Bé có thể nhập văn bản dài tùy ý và khám phá các vùng bản đồ bí mật của mã QR nhé!
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- NAVIGATION TABS BAR -->
+        <nav class="max-w-7xl mx-auto mt-3 overflow-x-auto">
+            <div class="flex items-center space-x-2 min-w-max pb-1">
+                <button onclick="switchTab(1)" id="tab-btn-1" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg glow-cyan">
+                    🔤 1. Tạo Mã & Soi Bit
+                </button>
+                <button onclick="switchTab(2)" id="tab-btn-2" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    🗺️ 2. Các Vùng Mã QR
+                </button>
+                <button onclick="switchTab(3)" id="tab-btn-3" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    🔍 3. Dịch Ziczắc
+                </button>
+                <button onclick="switchTab(4)" id="tab-btn-4" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    🎭 4. Mặt Nạ XOR
+                </button>
+                <button onclick="switchTab(5)" id="tab-btn-5" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    📖 5. Truyện Lịch Sử Lớn
+                </button>
+                <button onclick="switchTab(6)" id="tab-btn-6" class="tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700">
+                    🎮 6. Trắc Nghiệm & Game
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- MAIN INTERACTIVE CONTAINER -->
+    <main class="max-w-7xl mx-auto w-full p-4 flex-1">
+
+        <!-- ================= TAB 1: CREATE & INSPECT BITS ================= -->
+        <section id="tab-content-1" class="tab-page space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left: Control & Input Panel -->
+                <div class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-5 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-base font-bold text-cyan-300 flex items-center gap-2">
+                            <span>🔤</span> Nhập Văn Bản Cần Tạo Mã QR
+                        </h2>
+                        <span id="char-count-badge" class="text-xs font-mono font-bold text-amber-300 bg-amber-950/80 px-2.5 py-1 rounded-lg border border-amber-500/40">
+                            0 ký tự
+                        </span>
+                    </div>
+
+                    <!-- Input Field -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-300 block">Nội dung thông điệp (Tự động mở rộng QR Version):</label>
+                        <input type="text" id="qr-input-text" oninput="onInputTextChange()" value="XIN CHAO" placeholder="Nhập chữ cái, số, link..." class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 text-slate-100 font-mono text-sm font-bold tracking-wider outline-none transition">
+                    </div>
+
+                    <!-- Preset Samples -->
+                    <div class="space-y-2">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Ví dụ mẫu bé chọn nhanh:</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="setPresetInput('XIN CHAO')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 transition">👋 XIN CHAO</button>
+                            <button onclick="setPresetInput('THAM TU QR CODE 2026')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 transition">🔍 THAM TU QR</button>
+                            <button onclick="setPresetInput('STEM VIET NAM')" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-emerald-300 border border-slate-700 transition">🚀 STEM VIET NAM</button>
+                        </div>
+                    </div>
+
+                    <!-- Selected Letter Info & Binary Card -->
+                    <div id="selected-letter-info" class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Paginated Character Selector -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-300">Chọn chữ cái để soi 8 bit trên QR:</span>
+                            <div class="flex items-center gap-1">
+                                <button onclick="changePage(-1)" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">◀</button>
+                                <span id="page-indicator" class="text-[11px] font-mono font-bold text-cyan-300 px-1">Trang 1/1</span>
+                                <button onclick="changePage(1)" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300">▶</button>
+                            </div>
+                        </div>
+                        <div id="letter-cards-container" class="flex flex-wrap gap-1.5">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: QR Matrix Display & Canvas -->
+                <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4 shadow-xl text-center">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <span id="version-badge" class="text-xs font-mono font-bold text-cyan-300 bg-cyan-950/80 px-3 py-1 rounded-full border border-cyan-500/40">
+                            QR Version 1 (21x21)
+                        </span>
+                        <span id="highlight-status-badge" class="text-xs font-bold text-amber-300">
+                            Đang soi 8 bit neon
+                        </span>
+                    </div>
+
+                    <!-- Canvas Box -->
+                    <div class="flex justify-center items-center py-2">
+                        <canvas id="canvas-tab1" width="360" height="360" class="rounded-2xl border-4 border-slate-800 bg-white shadow-2xl max-w-full h-auto"></canvas>
+                    </div>
+
+                    <p class="text-xs text-slate-400 italic">
+                        💡 Mẹo: Các ô vuông được tô màu sáng rực rỡ kèm số thứ tự (1-8) trên ma trận mã QR chính là 8 ô bit nhị phân đại diện cho ký tự bé đang chọn!
+                    </p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: QR ANATOMY ================= -->
+        <section id="tab-content-2" class="tab-page hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left: Interactive Map Cards -->
+                <div class="lg:col-span-6 glass-card rounded-3xl p-6 space-y-4 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-base font-bold text-cyan-300 flex items-center gap-2">
+                            <span>🗺️</span> Bản Đồ Các Vùng Chức Năng Của Mã QR
+                        </h2>
+                        <button onclick="highlightAllRegions()" class="px-3 py-1 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition shadow">
+                            🌈 Xem Tất Cả
+                        </button>
+                    </div>
+
+                    <p class="text-xs text-slate-400">Nhấn vào từng thẻ bài bên dưới để khám phá vị trí và bí mật của từng vùng trên mã QR:</p>
+
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div id="region-card-finder" onclick="selectQRRegion('finder')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-cyan-300">1. Ô Định Vị</span>
+                                <span class="w-3 h-3 rounded-full bg-cyan-400 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">3 góc 7x7 lớn</span>
+                        </div>
+
+                        <div id="region-card-separator" onclick="selectQRRegion('separator')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-100">2. Viền Phân Cách</span>
+                                <span class="w-3 h-3 rounded-full bg-slate-100 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">Dải trắng cách ly</span>
+                        </div>
+
+                        <div id="region-card-timing" onclick="selectQRRegion('timing')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-amber-300">3. Thước Thời Gian</span>
+                                <span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">Hàng 6 & Cột 6</span>
+                        </div>
+
+                        <div id="region-card-alignment" onclick="selectQRRegion('alignment')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-emerald-300">4. Ô Căn Chỉnh</span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-400 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">Các ô 5x5 phụ</span>
+                        </div>
+
+                        <div id="region-card-format" onclick="selectQRRegion('format')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-indigo-300">5. TT Định Dạng</span>
+                                <span class="w-3 h-3 rounded-full bg-indigo-400 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">15 bit cấu hình</span>
+                        </div>
+
+                        <div id="region-card-dark" onclick="selectQRRegion('dark')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-purple-300">6. Ô Đen Cố Định</span>
+                                <span class="w-3 h-3 rounded-full bg-purple-400 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">1 ô chuẩn môi trường</span>
+                        </div>
+
+                        <div id="region-card-data" onclick="selectQRRegion('data')" class="region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1 col-span-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-rose-300">7. Vùng Dữ Liệu Thông Điệp & Sửa Lỗi</span>
+                                <span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 block">Toàn bộ các ô chứa tin nhắn mật</span>
+                        </div>
+                    </div>
+
+                    <!-- Region Detail Info Box -->
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h3 id="anatomy-title" class="text-sm font-bold text-cyan-300">1. Ô Định Vị Góc (Finder Patterns)</h3>
+                            <span id="anatomy-tag" class="text-[10px] font-mono font-bold text-amber-300 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-500/40">3 góc 7x7</span>
+                        </div>
+                        <p id="anatomy-desc" class="text-xs text-slate-300 leading-relaxed">
+                            Đây là 3 ô vuông lớn ở 3 góc của mã QR. Nhờ 3 ô vuông này, cho dù bé cầm điện thoại chụp ngược hay nghiêng 360 độ, máy quét vẫn xoay lại đúng chiều chuẩn!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right: Canvas Map -->
+                <div class="lg:col-span-6 glass-card rounded-3xl p-6 space-y-4 shadow-xl text-center">
+                    <h3 class="text-sm font-bold text-slate-200">Bản Đồ Trực Quan Tọa Độ QR</h3>
+                    <div class="flex justify-center items-center py-2">
+                        <canvas id="canvas-tab2-anatomy" width="360" height="360" class="rounded-2xl border-4 border-slate-800 bg-slate-950 shadow-2xl max-w-full h-auto"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: ZIGZAG SIMULATION ================= -->
+        <section id="tab-content-3" class="tab-page hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left: Player Controls & Timeline -->
+                <div class="lg:col-span-5 glass-card rounded-3xl p-6 space-y-5 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-base font-bold text-cyan-300 flex items-center gap-2">
+                            <span>🔍</span> Mô Phỏng Camera Quét Ziczắc
+                        </h2>
+                        <select id="sim-speed-select" onchange="changeSimSpeed()" class="bg-slate-950 border border-slate-700 text-xs font-bold text-cyan-300 rounded-xl px-2.5 py-1 outline-none">
+                            <option value="900">Tốc Độ: Chậm</option>
+                            <option value="600" selected>Tốc Độ: Vừa</option>
+                            <option value="250">Tốc Độ: Nhanh</option>
+                        </select>
+                    </div>
+
+                    <!-- Player Controls -->
+                    <div class="flex items-center gap-2">
+                        <button onclick="startStepSim()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg glow-cyan flex items-center justify-center gap-1.5 transition">
+                            <span>▶</span> Bắt Đầu Quét
+                        </button>
+                        <button onclick="pauseStepSim()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs border border-slate-700 transition">
+                            ⏸️ Tạm Dừng
+                        </button>
+                        <button onclick="nextStepSim()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition">
+                            ⏭️ Bước Tiếp
+                        </button>
+                        <button onclick="resetStepSim()" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-rose-300 font-bold text-xs border border-slate-700 transition">
+                            🔄 Làm Lại
+                        </button>
+                    </div>
+
+                    <!-- 6-Step Timeline -->
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div id="sim-step-card-1" class="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                            <span class="font-bold text-cyan-300 block">Bước 1: Tìm Góc</span>
+                            <span class="text-[10px] text-slate-400 block">Nhận diện 3 ô vuông</span>
+                        </div>
+                        <div id="sim-step-card-2" class="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                            <span class="font-bold text-amber-300 block">Bước 2: Đo Thước</span>
+                            <span class="text-[10px] text-slate-400 block">Căn lưới Timing</span>
+                        </div>
+                        <div id="sim-step-card-3" class="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                            <span class="font-bold text-indigo-300 block">Bước 3: Đọc Format</span>
+                            <span class="text-[10px] text-slate-400 block">Xác định Mask & EC</span>
+                        </div>
+                        <div id="sim-step-card-4" class="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                            <span class="font-bold text-emerald-300 block">Bước 4: Quét Ziczắc</span>
+                            <span class="text-[10px] text-slate-400 block">Thu thập từng bit 0/1</span>
+                        </div>
+                        <div id="sim-step-card-5" class="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                            <span class="font-bold text-purple-300 block">Bước 5: Ghép 8 Bit</span>
+                            <span class="text-[10px] text-slate-400 block">Chuyển sang ASCII</span>
+                        </div>
+                        <div id="sim-step-card-6" class="p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1">
+                            <span class="font-bold text-rose-300 block">Bước 6: Hoàn Thành</span>
+                            <span class="text-[10px] text-slate-400 block">Hiển thị văn bản</span>
+                        </div>
+                    </div>
+
+                    <!-- Train Carriage Display -->
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-amber-300">🚂 Đoàn Tàu 8-Bit Đang Thu Thập:</span>
+                            <span id="train-bit-counter" class="text-xs font-mono font-bold text-cyan-300">0 / 8 bits</span>
+                        </div>
+                        <div id="train-wagon-container" class="flex items-center gap-1.5 min-h-[36px]">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Decoded Stream Box -->
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                        <span class="text-xs font-bold text-emerald-300 block">📝 Chuỗi Ký Tự Đã Dịch Được:</span>
+                        <div id="decoded-chars-stream" class="flex flex-wrap gap-1.5 min-h-[32px]">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Final Result Message Box -->
+                    <div id="final-result-box" class="hidden p-4 rounded-2xl bg-emerald-950 border-2 border-emerald-400 text-center space-y-1 shadow-lg glow-emerald">
+                        <span class="text-xs font-bold text-emerald-300 uppercase block">🎉 THÔNG ĐIỆP GIẢI MÃ THÀNH CÔNG:</span>
+                        <p id="final-decoded-text" class="text-base font-black text-white font-mono">XIN CHAO</p>
+                    </div>
+                </div>
+
+                <!-- Right: Canvas Scan Display -->
+                <div class="lg:col-span-7 glass-card rounded-3xl p-6 space-y-4 shadow-xl text-center relative">
+                    <h3 class="text-sm font-bold text-slate-200">Đường Đi Ziczắc 2 Cột Của Con Trỏ Thám Tử</h3>
+                    <div class="flex justify-center items-center py-2 relative">
+                        <canvas id="canvas-tab3-sim" width="360" height="360" class="rounded-2xl border-4 border-slate-800 bg-white shadow-2xl max-w-full h-auto"></canvas>
+                        <div id="sim-laser-line" class="hidden absolute inset-0 pointer-events-none rounded-2xl border-2 border-cyan-400 animate-pulse"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: MASK PATTERNS & XOR ================= -->
+        <section id="tab-content-4" class="tab-page hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 space-y-6 shadow-xl">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-cyan-300 flex items-center gap-2">
+                            <span>🎭</span> Cơ Chế Mặt Nạ Đảo Màu (Mask Pattern & Phép XOR)
+                        </h2>
+                        <p class="text-xs text-slate-400">Khám phá cách thuật toán XOR lộn ngược các ô đen trắng để camera không bị lóa mắt khi chụp!</p>
+                    </div>
+
+                    <!-- Mask 0-7 Selector Buttons -->
+                    <div class="flex flex-wrap items-center gap-1 bg-slate-950 p-1.5 rounded-2xl border border-slate-800">
+                        <span class="text-xs font-bold text-slate-400 px-2">Mặt Nạ:</span>
+                        <button id="mask-btn-0" onclick="selectMaskPattern(0)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950">0</button>
+                        <button id="mask-btn-1" onclick="selectMaskPattern(1)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">1</button>
+                        <button id="mask-btn-2" onclick="selectMaskPattern(2)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">2</button>
+                        <button id="mask-btn-3" onclick="selectMaskPattern(3)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">3</button>
+                        <button id="mask-btn-4" onclick="selectMaskPattern(4)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">4</button>
+                        <button id="mask-btn-5" onclick="selectMaskPattern(5)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">5</button>
+                        <button id="mask-btn-6" onclick="selectMaskPattern(6)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">6</button>
+                        <button id="mask-btn-7" onclick="selectMaskPattern(7)" class="mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">7</button>
+                    </div>
+                </div>
+
+                <!-- 3-Layer Visualizer Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    <!-- Layer 1: Raw Data -->
+                    <div class="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span class="text-xs font-bold text-slate-300 uppercase block">Lớp 1: Dữ Liệu Thô (Unmasked)</span>
+                        <div class="flex justify-center">
+                            <canvas id="canvas-mask-raw" width="220" height="220" class="rounded-xl border-2 border-slate-800 bg-white shadow-md max-w-full h-auto"></canvas>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Có thể có các dải ô đen dài làm chói mắt camera.</p>
+                    </div>
+
+                    <!-- Operator XOR Symbol -->
+                    <div class="space-y-3 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                        <span id="mask-formula-lbl" class="text-xs font-bold text-cyan-300 uppercase block">Lớp 2: Lưới Mặt Nạ 0 ((Hàng + Cột) % 2 == 0)</span>
+                        <div class="flex justify-center">
+                            <canvas id="canvas-mask-pattern" width="220" height="220" class="rounded-xl border-2 border-slate-800 bg-white shadow-md max-w-full h-auto"></canvas>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Lưới caro quy tắc đảo màu bit (1 = Đảo, 0 = Giữ nguyên).</p>
+                    </div>
+
+                    <!-- Layer 3: Final Masked QR -->
+                    <div class="space-y-3 bg-slate-950 p-4 rounded-2xl border border-cyan-500/50 shadow-lg glow-cyan">
+                        <span class="text-xs font-bold text-emerald-300 uppercase block">Lớp 3: QR Hoàn Chỉnh (Masked = Lớp 1 ⊕ Lớp 2)</span>
+                        <div class="flex justify-center">
+                            <canvas id="canvas-mask-final" width="220" height="220" class="rounded-xl border-2 border-slate-800 bg-white shadow-md max-w-full h-auto"></canvas>
+                        </div>
+                        <p class="text-[11px] text-slate-400">Mã QR đẹp đẽ, đốm đen đan xen đều đặn dễ quét 100%!</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 5: STORY MODE (EXPANDED CONTENT) ================= -->
+        <section id="tab-content-5" class="tab-page hidden space-y-6">
+            <div class="glass-card rounded-3xl p-6 space-y-6">
+                
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-amber-300 flex items-center gap-2">
+                            <span>📖</span> Truyện Tranh Lịch Sử STEM: Hành Trình Phát Minh Mã QR
+                        </h2>
+                        <p class="text-xs text-slate-400">Cùng Thám Tử QR khám phá 6 chương truyện thần kỳ từ xưởng ô tô Toyota đến tương lai công nghệ toàn cầu</p>
+                    </div>
+
+                    <!-- 6 Chapters Selector Buttons -->
+                    <div class="flex flex-wrap items-center gap-1.5 bg-slate-950 p-2 rounded-2xl border border-slate-800">
+                        <span class="text-xs font-bold text-slate-400 px-1">Chương:</span>
+                        <button onclick="selectStoryChapter(1)" id="story-btn-1" class="story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 shadow">C1: Toyota 1994</button>
+                        <button onclick="selectStoryChapter(2)" id="story-btn-2" class="story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">C2: Cờ Vây</button>
+                        <button onclick="selectStoryChapter(3)" id="story-btn-3" class="story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">C3: Tỷ Lệ 1:1:3:1:1</button>
+                        <button onclick="selectStoryChapter(4)" id="story-btn-4" class="story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">C4: Giáp Vũ Trụ</button>
+                        <button onclick="selectStoryChapter(5)" id="story-btn-5" class="story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">C5: Quà Tặng 0$</button>
+                        <button onclick="selectStoryChapter(6)" id="story-btn-6" class="story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300">C6: Kỷ Nguyên 4.0</button>
+                    </div>
+                </div>
+
+                <!-- Story Display Area -->
+                <div id="story-chapter-container" class="space-y-6">
+                    <!-- Dynamic Chapter Content Populated Here -->
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ================= TAB 6: MINI-GAME & DETECTIVE BADGES (ENHANCED CONTENT) ================= -->
+        <section id="tab-content-6" class="tab-page hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                <!-- Left: Quiz Container -->
+                <div class="lg:col-span-6 glass-card rounded-3xl p-6 space-y-4 shadow-xl">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h2 class="text-base font-bold text-cyan-300 flex items-center gap-2">
+                            <span>🎮</span> Trắc Nghiệm STEM Thử Tài Thám Tử (8 Câu Hỏi)
+                        </h2>
+                        <span id="quiz-score-badge" class="text-xs font-bold text-amber-300 bg-amber-950 px-3 py-1 rounded-full border border-amber-500/40">
+                            Điểm: 0 / 100
+                        </span>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="w-full bg-slate-950 rounded-full h-2 border border-slate-800 overflow-hidden">
+                        <div id="quiz-progress-bar" class="bg-gradient-to-r from-cyan-400 to-emerald-400 h-full w-0 transition-all duration-300"></div>
+                    </div>
+
+                    <div id="quiz-container" class="space-y-4">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Right: Binary Switches Target Missions & Badge Collector -->
+                <div class="lg:col-span-6 space-y-6">
+                    
+                    <!-- Binary Switches Target Decoder Game -->
+                    <div class="glass-card rounded-3xl p-6 space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-amber-300 flex items-center gap-2">
+                                <span>🕹️</span> Thử Thách Gạt Bit - Nhiệm Vụ Ghép Chữ Bí Mật
+                            </h3>
+                            <span id="mission-step-badge" class="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2.5 py-0.5 rounded-lg border border-emerald-500/40">
+                                Nhiệm vụ 1/5
+                            </span>
+                        </div>
+
+                        <!-- Target Mission Card -->
+                        <div class="p-3.5 rounded-2xl bg-slate-950 border border-amber-500/40 flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">MỤC TIÊU CẦN TẠO:</span>
+                                <p id="target-mission-desc" class="text-xs font-bold text-cyan-300">Hãy gạt công tắc để tạo chữ 'Q' (Mã ASCII 81)</p>
+                            </div>
+                            <div class="text-right">
+                                <span id="target-mission-char" class="text-2xl font-black text-amber-300 font-mono">'Q'</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <!-- Bit Value Helper Guide Header -->
+                            <div class="grid grid-cols-8 gap-1 text-[10px] font-mono text-slate-400 text-center">
+                                <span>128</span><span>64</span><span>32</span><span>16</span><span>8</span><span>4</span><span>2</span><span>1</span>
+                            </div>
+
+                            <!-- 8 Switch Buttons Row -->
+                            <div id="switches-row" class="grid grid-cols-8 gap-1.5">
+                                <!-- Dynamic Switches -->
+                            </div>
+
+                            <!-- Converted Result Box -->
+                            <div class="p-3 rounded-2xl bg-slate-950 border border-cyan-500/40 flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase block">Kết Quả Hiện Tại:</span>
+                                    <p id="switch-converted-char" class="text-base font-black text-cyan-300 font-mono">'A' (Mã ASCII: 65)</p>
+                                </div>
+                                <button onclick="checkTargetMission()" id="btn-check-mission" class="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition">
+                                    ✅ Kiểm Tra
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Badge Collection Gallery (6 Badges) -->
+                    <div class="glass-card rounded-3xl p-6 space-y-4 shadow-xl">
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-emerald-300 flex items-center gap-2">
+                                <span>🏅</span> Bộ 6 Huy Hiệu Thám Tử QR
+                            </h3>
+                            <span id="badge-count-text" class="text-xs text-slate-400 font-bold">0 / 6 Huy Hiệu</span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div id="badge-1" class="p-3 rounded-2xl bg-slate-950 border border-slate-800 opacity-40 transition-all">
+                                <span class="text-3xl block">🔍</span>
+                                <span class="text-xs font-bold block mt-1">Mắt Thần Soi Bit</span>
+                                <span class="text-[9px] text-slate-500 block">Soi ít nhất 1 từ</span>
+                            </div>
+                            <div id="badge-2" class="p-3 rounded-2xl bg-slate-950 border border-slate-800 opacity-40 transition-all">
+                                <span class="text-3xl block">🗺️</span>
+                                <span class="text-xs font-bold block mt-1">Nhà Địa Lý QR</span>
+                                <span class="text-[9px] text-slate-500 block">Khám phá vùng QR</span>
+                            </div>
+                            <div id="badge-3" class="p-3 rounded-2xl bg-slate-950 border border-slate-800 opacity-40 transition-all">
+                                <span class="text-3xl block">📖</span>
+                                <span class="text-xs font-bold block mt-1">Sử Gia QR Code</span>
+                                <span class="text-[9px] text-slate-500 block">Đọc đủ 6 chương</span>
+                            </div>
+                            <div id="badge-4" class="p-3 rounded-2xl bg-slate-950 border border-slate-800 opacity-40 transition-all">
+                                <span class="text-3xl block">🕹️</span>
+                                <span class="text-xs font-bold block mt-1">Thợ Máy Nhị Phân</span>
+                                <span class="text-[9px] text-slate-500 block">Thắng game gạt bit</span>
+                            </div>
+                            <div id="badge-5" class="p-3 rounded-2xl bg-slate-950 border border-slate-800 opacity-40 transition-all">
+                                <span class="text-3xl block">🎓</span>
+                                <span class="text-xs font-bold block mt-1">Thám Tử Bậc Thầy</span>
+                                <span class="text-[9px] text-slate-500 block">Đạt 80+ điểm Quiz</span>
+                            </div>
+                            <div id="badge-6" class="p-3 rounded-2xl bg-slate-950 border border-slate-800 opacity-40 transition-all">
+                                <span class="text-3xl block">👑</span>
+                                <span class="text-xs font-bold block mt-1">Huyền Thoại STEM</span>
+                                <span class="text-[9px] text-slate-500 block">Sưu tập đủ 5 huy hiệu</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800 px-4 py-3 text-center text-xs text-slate-500 font-medium">
+        <p>Thám Tử QR - Khám Phá Mật Mã Ô Vuông | Dành cho trẻ em Việt Nam yêu thích Công Nghệ & Khoa Học STEM</p>
+    </footer>
+
+    <!-- JS ENGINE -->
+    <script>
+        /* ==========================================================================
+           1. SYNTHESIZED AUDIO ENGINE (WEB AUDIO API - NO EXTERNAL DEPENDENCY)
+           ========================================================================== */
+        class SoundEngine {
+            constructor() {
+                this.enabled = true;
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+            playTone(freq, duration = 0.1, type = 'sine') {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playFanfare() {
+                if (!this.enabled) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((f, i) => {
+                    setTimeout(() => this.playTone(f, 0.25, 'triangle'), i * 120);
+                });
+            }
+            playClick() { this.playTone(800, 0.04, 'sine'); }
+        }
+        const sound = new SoundEngine();
+
+        function toggleAudio() {
+            sound.enabled = !sound.enabled;
+            const btn = document.getElementById('btn-audio');
+            if (btn) {
+                btn.innerText = sound.enabled ? "🔊 Âm Thanh: Bật" : "🔇 Âm Thanh: Tắt";
+                btn.className = sound.enabled 
+                    ? "px-3 py-1.5 rounded-xl text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700"
+                    : "px-3 py-1.5 rounded-xl text-xs bg-rose-950 text-rose-300 font-bold border border-rose-800";
+            }
+        }
+
+        // Dual Mode Toggle Logic (Kids vs Math Expert)
+        let isExpertMode = false;
+        function toggleExpertMode() {
+            sound.playClick();
+            isExpertMode = !isExpertMode;
+            const btn = document.getElementById('btn-expert-mode');
+            if (btn) {
+                btn.innerHTML = isExpertMode 
+                    ? "<span>🎓 Chế Độ: Chuyên Gia STEM</span>"
+                    : "<span>👶 Chế Độ: Thám Tử Nhi Đồng</span>";
+            }
+            setRobotSpeech(isExpertMode 
+                ? "Bé đã mở khóa Chế Độ Chuyên Gia STEM! Cấu trúc ma trận QR mở rộng không giới hạn ký tự và bảng tra cứu chuẩn."
+                : "Tớ đã chuyển về Chế Độ Thám Tử Nhi Đồng với các hình ảnh ẩn dụ sinh động và dễ hiểu!"
+            );
+        }
+
+        /* ==========================================================================
+           2. CANVAS CONFETTI ENGINE (PURE JS - NO EXTERNAL DEPENDENCY)
+           ========================================================================== */
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#38bdf8', '#fbbf24', '#34d399', '#f43f5e', '#a855f7'];
+
+            for (let i = 0; i < 70; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: (Math.random() - 0.7) * 14,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let alive = false;
+                particles.forEach(p => {
+                    if (p.life > 0) {
+                        alive = true;
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.25; // gravity
+                        p.life -= 1.5;
+                        ctx.fillStyle = p.color;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+                if (alive) requestAnimationFrame(render);
+            }
+            render();
+        }
+
+        /* ==========================================================================
+           3. DYNAMIC QR CODE GENERATOR (DYNAMIC VERSION AUTO-SCALING V1 - V10)
+           ========================================================================== */
+        let currentQRVersion = 1;
+        let matrixSize = 21;
+        let qrMatrix = [];
+        let isFunctionModule = [];
+        let bitPlacementCoords = []; // Array of {r, c, charIdx, bitIdx}
+
+        // Alignment Pattern Centers for Version 1 to 6
+        const ALIGNMENT_PATTERN_POS = {
+            1: [],
+            2: [6, 18],
+            3: [6, 22],
+            4: [6, 26],
+            5: [6, 30],
+            6: [6, 34]
+        };
+
+        function calculateRequiredVersion(textLen) {
+            if (textLen <= 14) return 1;
+            if (textLen <= 26) return 2;
+            if (textLen <= 42) return 3;
+            if (textLen <= 62) return 4;
+            if (textLen <= 84) return 5;
+            return Math.min(10, 6 + Math.floor((textLen - 84) / 20));
+        }
+
+        function initQRMatrixStructure(version) {
+            currentQRVersion = version;
+            matrixSize = 21 + (version - 1) * 4;
+
+            qrMatrix = Array(matrixSize).fill(0).map(() => Array(matrixSize).fill(0));
+            isFunctionModule = Array(matrixSize).fill(false).map(() => Array(matrixSize).fill(false));
+
+            // Place Finder Patterns (7x7)
+            const placeFinder = (startR, startC) => {
+                for (let r = 0; r < 7; r++) {
+                    for (let c = 0; c < 7; c++) {
+                        const isBorder = (r === 0 || r === 6 || c === 0 || c === 6);
+                        const isCenter = (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+                        qrMatrix[startR + r][startC + c] = (isBorder || isCenter) ? 1 : 0;
+                        isFunctionModule[startR + r][startC + c] = true;
+                    }
+                }
+                for (let r = -1; r <= 7; r++) {
+                    for (let c = -1; c <= 7; c++) {
+                        const nr = startR + r;
+                        const nc = startC + c;
+                        if (nr >= 0 && nr < matrixSize && nc >= 0 && nc < matrixSize) {
+                            if (!isFunctionModule[nr][nc]) {
+                                qrMatrix[nr][nc] = 0;
+                                isFunctionModule[nr][nc] = true;
+                            }
+                        }
+                    }
+                }
+            };
+
+            placeFinder(0, 0); // Top-Left
+            placeFinder(0, matrixSize - 7); // Top-Right
+            placeFinder(matrixSize - 7, 0); // Bottom-Left
+
+            // Timing Patterns
+            for (let i = 8; i < matrixSize - 8; i++) {
+                qrMatrix[6][i] = (i % 2 === 0) ? 1 : 0;
+                isFunctionModule[6][i] = true;
+                qrMatrix[i][6] = (i % 2 === 0) ? 1 : 0;
+                isFunctionModule[i][6] = true;
+            }
+
+            // Alignment Patterns (for Version >= 2)
+            if (version >= 2) {
+                const centers = ALIGNMENT_PATTERN_POS[Math.min(version, 6)] || [6, matrixSize - 7];
+                centers.forEach(rCenter => {
+                    centers.forEach(cCenter => {
+                        if (isFunctionModule[rCenter][cCenter]) return; // Skip if overlaps finders
+
+                        for (let r = -2; r <= 2; r++) {
+                            for (let c = -2; c <= 2; c++) {
+                                const isBorder = (Math.abs(r) === 2 || Math.abs(c) === 2);
+                                const isCenter = (r === 0 && c === 0);
+                                qrMatrix[rCenter + r][cCenter + c] = (isBorder || isCenter) ? 1 : 0;
+                                isFunctionModule[rCenter + r][cCenter + c] = true;
+                            }
+                        }
+                    });
+                });
+            }
+
+            // Dark Module
+            qrMatrix[4 * version + 9][8] = 1;
+            isFunctionModule[4 * version + 9][8] = true;
+
+            // Reserve Format Information Area
+            for (let i = 0; i < 9; i++) {
+                if (i !== 6) { isFunctionModule[8][i] = true; isFunctionModule[i][8] = true; }
+            }
+            for (let i = matrixSize - 8; i < matrixSize; i++) {
+                isFunctionModule[8][i] = true; isFunctionModule[i][8] = true;
+            }
+        }
+
+        function generateZigzagMap(inputText) {
+            const version = calculateRequiredVersion(inputText.length);
+            initQRMatrixStructure(version);
+            bitPlacementCoords = [];
+
+            let bitStream = [];
+            [0,1,0,0].forEach(b => bitStream.push(b)); // Mode indicator
+            const len = inputText.length;
+            for (let b = 7; b >= 0; b--) bitStream.push((len >> b) & 1);
+
+            for (let i = 0; i < len; i++) {
+                const charCode = inputText.charCodeAt(i) || 63;
+                for (let b = 7; b >= 0; b--) {
+                    bitStream.push((charCode >> b) & 1);
+                }
+            }
+
+            let currentBitStreamIdx = 0;
+
+            for (let rightCol = matrixSize - 1; rightCol > 0; rightCol -= 2) {
+                if (rightCol === 6) rightCol--; // Skip timing column
+
+                const upward = ((rightCol + 1) / 2) % 2 === 1;
+
+                for (let rowStep = 0; rowStep < matrixSize; rowStep++) {
+                    const r = upward ? (matrixSize - 1 - rowStep) : rowStep;
+
+                    for (let colOffset = 0; colOffset < 2; colOffset++) {
+                        const c = rightCol - colOffset;
+
+                        if (!isFunctionModule[r][c]) {
+                            let bitVal = 0;
+                            let charIdx = -1;
+                            let charBitIdx = -1;
+
+                            if (currentBitStreamIdx >= 12 && currentBitStreamIdx < 12 + len * 8) {
+                                const relBit = currentBitStreamIdx - 12;
+                                charIdx = Math.floor(relBit / 8);
+                                charBitIdx = relBit % 8;
+                            }
+
+                            if (currentBitStreamIdx < bitStream.length) {
+                                bitVal = bitStream[currentBitStreamIdx];
+                            } else {
+                                bitVal = (currentBitStreamIdx % 2 === 0) ? 1 : 0;
+                            }
+
+                            qrMatrix[r][c] = bitVal;
+
+                            if (charIdx !== -1) {
+                                bitPlacementCoords.push({ r, c, charIdx, charBitIdx, bitVal });
+                            }
+
+                            currentBitStreamIdx++;
+                        }
+                    }
+                }
+            }
+        }
+
+        /* ==========================================================================
+           4. TAB 1: UNLIMITED INPUT & PAGINATED CHARACTER INSPECTOR
+           ========================================================================== */
+        let selectedCharIndex = 0;
+        let currentPage = 1;
+        const pageSize = 10;
+
+        function onInputTextChange() {
+            const input = document.getElementById('qr-input-text');
+            if (!input) return;
+            let val = input.value.toUpperCase().replace(/[^A-Z0-9\s:/\.\-]/g, '');
+            input.value = val;
+
+            const charCount = val.length;
+            const countBadge = document.getElementById('char-count-badge');
+            if (countBadge) countBadge.innerText = `${charCount} ký tự`;
+
+            if (val.length === 0) val = "A";
+
+            generateZigzagMap(val);
+
+            // Update Version Badge
+            const badge = document.getElementById('version-badge');
+            if (badge) badge.innerText = `QR Version ${currentQRVersion} (${matrixSize}x${matrixSize})`;
+
+            selectedCharIndex = 0;
+            currentPage = 1;
+            renderTab1UI();
+        }
+
+        function setPresetInput(text) {
+            sound.playClick();
+            const input = document.getElementById('qr-input-text');
+            if (input) {
+                input.value = text;
+                onInputTextChange();
+            }
+        }
+
+        function changePage(delta) {
+            sound.playClick();
+            const input = document.getElementById('qr-input-text');
+            const inputText = input ? (input.value || "A") : "A";
+            const totalPages = Math.ceil(inputText.length / pageSize) || 1;
+            currentPage += delta;
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            renderTab1UI();
+        }
+
+        function renderTab1UI() {
+            const input = document.getElementById('qr-input-text');
+            if (!input) return;
+            const inputText = input.value || "A";
+            const cardsContainer = document.getElementById('letter-cards-container');
+            if (!cardsContainer) return;
+            cardsContainer.innerHTML = '';
+
+            const pageIndicator = document.getElementById('page-indicator');
+            const totalPages = Math.ceil(inputText.length / pageSize) || 1;
+            if (pageIndicator) pageIndicator.innerText = `Trang ${currentPage}/${totalPages}`;
+
+            const startIdx = (currentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, inputText.length);
+
+            for (let i = startIdx; i < endIdx; i++) {
+                const char = inputText[i];
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    sound.playClick();
+                    selectedCharIndex = i;
+                    renderTab1UI();
+                };
+
+                if (i === selectedCharIndex) {
+                    btn.className = "px-3 py-1.5 rounded-xl font-mono font-black text-xs bg-cyan-400 text-slate-950 shadow-lg glow-cyan scale-105 border-2 border-white transition-all";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-xl font-mono font-bold text-xs bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-700 transition-all";
+                }
+                btn.innerText = `'${char}'`;
+                cardsContainer.appendChild(btn);
+            }
+
+            const char = inputText[selectedCharIndex] || 'A';
+            const ascii = char.charCodeAt(0);
+            let binaryStr = ascii.toString(2).padStart(8, '0');
+
+            const infoCard = document.getElementById('selected-letter-info');
+            if (infoCard) {
+                infoCard.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <span class="text-xs font-bold text-amber-300">Đang soi Ký Tự '${char}' (Vị trí #${selectedCharIndex + 1}):</span>
+                        <span class="font-mono text-xs text-cyan-400 font-bold">Mã ASCII: ${ascii}</span>
+                    </div>
+                    <div class="flex items-center justify-between font-mono text-xs">
+                        <span class="text-slate-400">Chuỗi 8-bit nhị phân:</span>
+                        <span class="text-emerald-400 font-bold tracking-widest bg-slate-900 px-2 py-1 rounded-lg border border-slate-800">${binaryStr}</span>
+                    </div>
+                `;
+            }
+
+            const badge = document.getElementById('highlight-status-badge');
+            if (badge) badge.innerText = `Đang soi chữ '${char}' (8 bit neon)`;
+
+            drawTab1Canvas();
+        }
+
+        function drawTab1Canvas() {
+            const canvas = document.getElementById('canvas-tab1');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const size = matrixSize;
+            const cellSize = canvas.width / size;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const isDark = qrMatrix[r][c] === 1;
+                    ctx.fillStyle = isDark ? "#0f172a" : "#ffffff";
+                    ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                }
+            }
+
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.2)";
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= size; i++) {
+                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvas.width, i * cellSize); ctx.stroke();
+            }
+
+            const activeCoords = bitPlacementCoords.filter(item => item.charIdx === selectedCharIndex);
+
+            activeCoords.forEach((coord) => {
+                const x = coord.c * cellSize;
+                const y = coord.r * cellSize;
+
+                ctx.fillStyle = coord.bitVal === 1 ? "#22d3ee" : "#fbbf24";
+                ctx.fillRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + 1, y + 1, cellSize - 2, cellSize - 2);
+
+                if (cellSize >= 10) {
+                    ctx.fillStyle = "#0f172a";
+                    ctx.font = "bold 9px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(`${coord.charBitIdx + 1}`, x + cellSize / 2, y + cellSize / 2);
+                }
+            });
+        }
+
+        /* ==========================================================================
+           5. TAB 2: QR CODE ANATOMY & REGIONS (BẢN ĐỒ CÁC VÙNG QR CODE)
+           ========================================================================== */
+        let activeQRRegion = 'finder';
+
+        const regionDescriptions = {
+            'finder': {
+                title: '1. Ô Định Vị Góc (Finder Patterns)',
+                tag: '3 góc 7x7',
+                desc: 'Đây là 3 ô vuông lớn gồm khung đen 7x7, viền trắng 5x5 và nhân đen 3x3 ở 3 góc của mã QR. Nhờ 3 ô vuông này, cho dù bé cầm điện thoại chụp ngược hay nghiêng 360 độ, máy quét vẫn lập tức xoay lại đúng chiều chuẩn!',
+                color: '#22d3ee'
+            },
+            'separator': {
+                title: '2. Viền Phân Cách (Separators)',
+                tag: 'Dải trắng rộng 1 ô',
+                desc: 'Dải ô màu trắng bao quanh các Ô Định Vị để phân tách chúng hoàn toàn khỏi vùng chứa dữ liệu. Điều này ngăn camera bị lẫn lộn giữa khung định vị và các ô tin nhắn bí mật.',
+                color: '#f8fafc'
+            },
+            'timing': {
+                title: '3. Thước Đo Thời Gian (Timing Patterns)',
+                tag: 'Sọc caro Hàng 6 & Cột 6',
+                desc: 'Hai dải ô vuông đan xen đen-trắng chạy ngang ở hàng 6 và chạy dọc ở cột 6. Giống như một chiếc thước kẻ, vùng này giúp camera đo đạc chính xác kích thước và khoảng cách giữa từng ô vuông.',
+                color: '#fbbf24'
+            },
+            'alignment': {
+                title: '4. Ô Căn Chỉnh (Alignment Patterns)',
+                tag: 'Các ô nhỏ 5x5',
+                desc: 'Các ô vuông nhỏ 5x5 xuất hiện từ QR Version 2 trở lên. Giúp máy quét chỉnh sửa độ biến dạng khi mã QR bị dán lên bề mặt cong như chai nước, cốc uống trà sữa hay áo thun nhăn.',
+                color: '#34d399'
+            },
+            'format': {
+                title: '5. Thông Tin Định Dạng (Format Information)',
+                tag: '15 bits bao quanh góc',
+                desc: 'Chứa thông tin về cấp độ sửa lỗi (L/M/Q/H) và mã mặt nạ mask đang áp dụng. Máy quét đọc vùng này trước tiên để biết cách mở màn đảo màu XOR.',
+                color: '#818cf8'
+            },
+            'dark': {
+                title: '6. Ô Đen Cố Định (Dark Module)',
+                tag: '1 ô duy nhất',
+                desc: 'Một ô màu đen luôn luôn nằm cố định tại vị trí chuẩn. Ô này được ống kính camera dùng để calib đo đạc mức độ đậm nhạt sáng tối của ánh sáng môi trường.',
+                color: '#c084fc'
+            },
+            'data': {
+                title: '7. Vùng Dữ Liệu & Sửa Lỗi (Data & EC Codewords)',
+                tag: 'Toàn bộ ô còn lại',
+                desc: 'Tất cả các ô vuông đen trắng còn lại trên ma trận! Đây chính là nơi lưu giữ thông điệp văn bản bí mật đã được dịch ra dạng 0 và 1, kèm theo các byte bảo vệ dự phòng.',
+                color: '#f43f5e'
+            },
+            'all': {
+                title: '🌈 Toàn Bộ Bản Đồ Cấu Trúc Mã QR',
+                tag: 'Đầy đủ các vùng',
+                desc: 'Bản đồ tổng thể biểu diễn sự kết hợp hoàn hảo giữa các Vùng Định Vị Hệ Thống (Màu Xanh/Vàng/Tím) và Vùng Dữ Liệu Thông Điệp (Màu Đỏ/Xanh Lá)!',
+                color: '#38bdf8'
+            }
+        };
+
+        function selectQRRegion(regionKey) {
+            sound.playClick();
+            activeQRRegion = regionKey;
+
+            const info = regionDescriptions[regionKey] || regionDescriptions['finder'];
+            const titleEl = document.getElementById('anatomy-title');
+            const tagEl = document.getElementById('anatomy-tag');
+            const descEl = document.getElementById('anatomy-desc');
+
+            if (titleEl) titleEl.innerText = info.title;
+            if (tagEl) tagEl.innerText = info.tag;
+            if (descEl) descEl.innerText = info.desc;
+
+            // Highlight active button/card
+            document.querySelectorAll('.region-card').forEach(card => {
+                card.className = "region-card p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 cursor-pointer transition-all space-y-1";
+            });
+
+            const activeCard = document.getElementById(`region-card-${regionKey}`);
+            if (activeCard) {
+                activeCard.className = "region-card p-3 rounded-2xl bg-slate-900 border-2 border-cyan-400 shadow-lg glow-cyan cursor-pointer transition-all space-y-1 scale-102";
+            }
+
+            drawTab2AnatomyCanvas();
+        }
+
+        function highlightAllRegions() {
+            selectQRRegion('all');
+        }
+
+        function drawTab2AnatomyCanvas() {
+            const canvas = document.getElementById('canvas-tab2-anatomy');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const size = matrixSize;
+            const cellSize = canvas.width / size;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const isDark = qrMatrix[r][c] === 1;
+                    
+                    let fillColor = isDark ? "#1e293b" : "#0f172a";
+                    let isHighlighted = false;
+
+                    // Finder Patterns (Top-Left, Top-Right, Bottom-Left 7x7)
+                    const isFinder = (r < 7 && c < 7) || (r < 7 && c >= size - 7) || (r >= size - 7 && c < 7);
+                    
+                    // Separator (around finders)
+                    const isSeparator = (r <= 7 && c <= 7 && !isFinder) ||
+                                        (r <= 7 && c >= size - 8 && !isFinder) ||
+                                        (r >= size - 8 && c <= 7 && !isFinder);
+
+                    // Timing Patterns
+                    const isTiming = (r === 6 || c === 6) && !isFinder && !isSeparator;
+
+                    // Alignment Patterns
+                    const isAlignment = (currentQRVersion >= 2) && (r >= size - 9 && r <= size - 5 && c >= size - 9 && c <= size - 5);
+
+                    // Format Info
+                    const isFormat = (r === 8 && (c <= 8 || c >= size - 8)) || (c === 8 && (r <= 8 || r >= size - 8));
+
+                    // Dark Module
+                    const isDarkMod = (r === 4 * currentQRVersion + 9 && c === 8);
+
+                    // Data Region
+                    const isData = !isFinder && !isSeparator && !isTiming && !isAlignment && !isFormat && !isDarkMod;
+
+                    if (activeQRRegion === 'finder' && isFinder) { fillColor = "#22d3ee"; isHighlighted = true; }
+                    else if (activeQRRegion === 'separator' && isSeparator) { fillColor = "#f8fafc"; isHighlighted = true; }
+                    else if (activeQRRegion === 'timing' && isTiming) { fillColor = "#fbbf24"; isHighlighted = true; }
+                    else if (activeQRRegion === 'alignment' && isAlignment) { fillColor = "#34d399"; isHighlighted = true; }
+                    else if (activeQRRegion === 'format' && isFormat) { fillColor = "#818cf8"; isHighlighted = true; }
+                    else if (activeQRRegion === 'dark' && isDarkMod) { fillColor = "#c084fc"; isHighlighted = true; }
+                    else if (activeQRRegion === 'data' && isData) { fillColor = "#f43f5e"; isHighlighted = true; }
+                    else if (activeQRRegion === 'all') {
+                        if (isFinder) fillColor = "#22d3ee";
+                        else if (isTiming) fillColor = "#fbbf24";
+                        else if (isAlignment) fillColor = "#34d399";
+                        else if (isFormat) fillColor = "#818cf8";
+                        else if (isDarkMod) fillColor = "#c084fc";
+                        else fillColor = isDark ? "#f43f5e" : "#334155";
+                        isHighlighted = true;
+                    }
+
+                    ctx.fillStyle = fillColor;
+                    ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+
+                    if (isHighlighted) {
+                        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+                        ctx.lineWidth = 0.5;
+                        ctx.strokeRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        /* ==========================================================================
+           6. TAB 3: ZIGZAG SCANNING SIMULATION ENGINE
+           ========================================================================== */
+        let simState = {
+            currentStep: 1,
+            isPlaying: false,
+            timer: null,
+            speed: 600,
+            bitCounter: 0,
+            collectedBits: [],
+            decodedChars: []
+        };
+
+        function switchTab(tabNum) {
+            sound.playClick();
+            for (let i = 1; i <= 6; i++) {
+                const page = document.getElementById(`tab-content-${i}`);
+                const btn = document.getElementById(`tab-btn-${i}`);
+                if (page) page.classList.add('hidden');
+                if (btn) {
+                    btn.className = "tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-slate-800 text-slate-300 hover:bg-slate-700";
+                }
+            }
+
+            const activePage = document.getElementById(`tab-content-${tabNum}`);
+            const activeBtn = document.getElementById(`tab-btn-${tabNum}`);
+            if (activePage) activePage.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = "tab-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg glow-cyan";
+            }
+
+            const speechMap = {
+                1: "Ở Tab này, bé nhập câu dài bất kỳ rồi bấm chọn từng từ để soi đúng 8 ô bit nhị phân trên ma trận nhé!",
+                2: "Bản đồ các vùng QR Code! Bấm vào từng thẻ bài để xem vị trí ô định vị, thước đo thời gian và vùng dữ liệu!",
+                3: "Bấm '▶ Bắt Đầu Quét' để xem con trỏ thám tử chạy ziczắc thu thập các viên gạch 8-bit nào!",
+                4: "Lớp Mặt Nạ XOR giúp xáo trộn các ô đen trắng để máy ảnh không bao giờ bị lóa mắt khi chụp!",
+                5: "Khám phá câu chuyện thần kỳ về vị kỹ sư Nhật Bản phát minh ra mã QR từ bàn cờ vây!",
+                6: "Cùng chơi game trắc nghiệm và gạt công tắc 8-bit để sưu tập đủ Bộ Huy Hiệu Thám Tử nhé!"
+            };
+            setRobotSpeech(speechMap[tabNum] || "Cùng khám phá nhé!");
+
+            if (tabNum === 1) renderTab1UI();
+            if (tabNum === 2) selectQRRegion('finder');
+            if (tabNum === 3) resetStepSim();
+            if (tabNum === 4) selectMaskPattern(0);
+            if (tabNum === 5) selectStoryChapter(1);
+            if (tabNum === 6) initGameTab();
+        }
+
+        function setRobotSpeech(msg) {
+            const el = document.getElementById('bot-speech');
+            if (el) el.innerText = msg;
+        }
+
+        function changeSimSpeed() {
+            const select = document.getElementById('sim-speed-select');
+            if (select) {
+                simState.speed = parseInt(select.value);
+                if (simState.isPlaying) {
+                    pauseStepSim();
+                    startStepSim();
+                }
+            }
+        }
+
+        function resetStepSim() {
+            pauseStepSim();
+            simState.currentStep = 1;
+            simState.bitCounter = 0;
+            simState.collectedBits = [];
+            simState.decodedChars = [];
+
+            const laser = document.getElementById('sim-laser-line');
+            if (laser) laser.classList.add('hidden');
+
+            const resultBox = document.getElementById('final-result-box');
+            if (resultBox) resultBox.classList.add('hidden');
+
+            const stream = document.getElementById('decoded-chars-stream');
+            if (stream) stream.innerHTML = `<span class="text-xs text-slate-500 font-mono italic">Chưa có dữ liệu...</span>`;
+
+            updateStepTimelineUI();
+            drawTab3SimCanvas();
+        }
+
+        function startStepSim() {
+            if (simState.isPlaying) return;
+            sound.playClick();
+            simState.isPlaying = true;
+            document.getElementById('sim-laser-line').classList.remove('hidden');
+            simState.timer = setInterval(advanceSimLogic, simState.speed);
+        }
+
+        function pauseStepSim() {
+            simState.isPlaying = false;
+            if (simState.timer) clearInterval(simState.timer);
+            const laser = document.getElementById('sim-laser-line');
+            if (laser) laser.classList.add('hidden');
+        }
+
+        function nextStepSim() {
+            sound.playClick();
+            advanceSimLogic();
+        }
+
+        function advanceSimLogic() {
+            if (simState.currentStep < 6) {
+                simState.currentStep++;
+            } else {
+                if (simState.bitCounter < bitPlacementCoords.length) {
+                    const coord = bitPlacementCoords[simState.bitCounter];
+                    simState.collectedBits.push(coord.bitVal);
+                    sound.playTone(600 + coord.bitVal * 300, 0.05);
+
+                    if (simState.collectedBits.length === 8) {
+                        const ascii = parseInt(simState.collectedBits.join(''), 2);
+                        const char = String.fromCharCode(ascii);
+                        simState.decodedChars.push(char);
+                        simState.collectedBits = [];
+                        sound.playTone(900, 0.1, 'triangle');
+                    }
+
+                    simState.bitCounter++;
+                } else {
+                    pauseStepSim();
+                    simState.currentStep = 6;
+                    sound.playFanfare();
+                    triggerConfetti();
+
+                    const resultBox = document.getElementById('final-result-box');
+                    if (resultBox) resultBox.classList.remove('hidden');
+
+                    const inputText = document.getElementById('qr-input-text').value || "XIN CHAO";
+                    document.getElementById('final-decoded-text').innerText = inputText;
+                    setRobotSpeech("🎉 Xuất sắc! Máy quét đã đọc xong ziczắc và dịch thành công thông điệp!");
+                }
+            }
+
+            updateStepTimelineUI();
+            drawTab3SimCanvas();
+            renderSimTrainAndStream();
+        }
+
+        function updateStepTimelineUI() {
+            for (let i = 1; i <= 6; i++) {
+                const card = document.getElementById(`sim-step-card-${i}`);
+                if (card) {
+                    if (i === simState.currentStep) {
+                        card.className = "p-2.5 rounded-2xl bg-cyan-950 border-2 border-cyan-400 text-center space-y-1 shadow-lg scale-105 transition-all";
+                    } else if (i < simState.currentStep) {
+                        card.className = "p-2.5 rounded-2xl bg-slate-900 border border-emerald-500/50 text-center space-y-1 transition-all";
+                    } else {
+                        card.className = "p-2.5 rounded-2xl bg-slate-950 border border-slate-800 text-center space-y-1 opacity-60 transition-all";
+                    }
+                }
+            }
+        }
+
+        function renderSimTrainAndStream() {
+            const wagonContainer = document.getElementById('train-wagon-container');
+            if (wagonContainer) {
+                wagonContainer.innerHTML = '';
+                document.getElementById('train-bit-counter').innerText = `${simState.collectedBits.length} / 8 bits`;
+
+                if (simState.collectedBits.length === 0) {
+                    wagonContainer.innerHTML = `<span class="text-xs text-slate-500 font-mono italic">Đang chờ 8 bits...</span>`;
+                } else {
+                    simState.collectedBits.forEach((bit) => {
+                        const box = document.createElement('div');
+                        box.className = bit === 1 
+                            ? "w-7 h-7 rounded-lg bg-cyan-400 text-slate-950 font-mono font-black text-xs flex items-center justify-center border border-white shadow"
+                            : "w-7 h-7 rounded-lg bg-amber-400 text-slate-950 font-mono font-black text-xs flex items-center justify-center border border-white shadow";
+                        box.innerText = bit;
+                        wagonContainer.appendChild(box);
+                    });
+                }
+            }
+
+            const stream = document.getElementById('decoded-chars-stream');
+            if (stream) {
+                if (simState.decodedChars.length === 0) {
+                    stream.innerHTML = `<span class="text-xs text-slate-500 font-mono italic">Chưa đọc xong từ nào...</span>`;
+                } else {
+                    stream.innerHTML = '';
+                    simState.decodedChars.forEach(ch => {
+                        const badge = document.createElement('span');
+                        badge.className = "px-2.5 py-1 rounded-xl bg-cyan-500/20 border border-cyan-400 text-amber-300 font-mono font-black text-xs shadow";
+                        badge.innerText = `'${ch}'`;
+                        stream.appendChild(badge);
+                    });
+                }
+            }
+        }
+
+        function drawTab3SimCanvas() {
+            const canvas = document.getElementById('canvas-tab3-sim');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const size = matrixSize;
+            const cellSize = canvas.width / size;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const isDark = qrMatrix[r][c] === 1;
+                    ctx.fillStyle = isDark ? "#0f172a" : "#ffffff";
+                    ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                }
+            }
+
+            if (simState.currentStep === 1) {
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(0, 0, 7 * cellSize, 7 * cellSize);
+                ctx.strokeRect((size - 7) * cellSize, 0, 7 * cellSize, 7 * cellSize);
+                ctx.strokeRect(0, (size - 7) * cellSize, 7 * cellSize, 7 * cellSize);
+            }
+
+            if (simState.currentStep === 2) {
+                ctx.fillStyle = "rgba(245, 158, 11, 0.4)";
+                ctx.fillRect(8 * cellSize, 6 * cellSize, (size - 16) * cellSize, cellSize);
+                ctx.fillRect(6 * cellSize, 8 * cellSize, cellSize, (size - 16) * cellSize);
+            }
+
+            if (simState.currentStep >= 4 && bitPlacementCoords.length > 0) {
+                const currentCoordIdx = Math.min(simState.bitCounter, bitPlacementCoords.length - 1);
+                const coord = bitPlacementCoords[currentCoordIdx];
+
+                if (coord) {
+                    const x = coord.c * cellSize;
+                    const y = coord.r * cellSize;
+
+                    ctx.fillStyle = "#f43f5e";
+                    ctx.beginPath();
+                    ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 2 + 1, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = "#ffffff";
+                    ctx.beginPath();
+                    ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize / 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.2)";
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= size; i++) {
+                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvas.width, i * cellSize); ctx.stroke();
+            }
+        }
+
+        /* ==========================================================================
+           7. TAB 4: MASK PATTERNS & XOR ENGINE
+           ========================================================================== */
+        let currentMaskIdx = 0;
+
+        function selectMaskPattern(idx) {
+            sound.playClick();
+            currentMaskIdx = idx;
+
+            for (let i = 0; i < 8; i++) {
+                const btn = document.getElementById(`mask-btn-${i}`);
+                if (btn) {
+                    btn.className = (i === idx)
+                        ? "mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-cyan-500 text-slate-950"
+                        : "mask-btn px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-300";
+                }
+            }
+
+            const formulas = [
+                "((Hàng + Cột) % 2 == 0)",
+                "(Hàng % 2 == 0)",
+                "(Cột % 3 == 0)",
+                "((Hàng + Cột) % 3 == 0)",
+                "((Math.floor(Hàng / 2) + Math.floor(Cột / 3)) % 2 == 0)",
+                "(((Hàng * Cột) % 2) + ((Hàng * Cột) % 3) == 0)",
+                "((((Hàng * Cột) % 2) + ((Hàng * Cột) % 3)) % 2 == 0)",
+                "((((Hàng + Cột) % 2) + ((Hàng * Cột) % 3)) % 2 == 0)"
+            ];
+
+            const formulaLbl = document.getElementById('mask-formula-lbl');
+            if (formulaLbl) formulaLbl.innerText = `Lớp 2: Lưới Mặt Nạ ${idx} ${formulas[idx]}`;
+
+            drawTab4Canvases();
+        }
+
+        function getMaskValue(patternIdx, r, c) {
+            switch (patternIdx) {
+                case 0: return (r + c) % 2 === 0 ? 1 : 0;
+                case 1: return r % 2 === 0 ? 1 : 0;
+                case 2: return c % 3 === 0 ? 1 : 0;
+                case 3: return (r + c) % 3 === 0 ? 1 : 0;
+                case 4: return (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0 ? 1 : 0;
+                case 5: return ((r * c) % 2) + ((r * c) % 3) === 0 ? 1 : 0;
+                case 6: return (((r * c) % 2) + ((r * c) % 3)) % 2 === 0 ? 1 : 0;
+                case 7: return (((r + c) % 2) + ((r * c) % 3)) % 2 === 0 ? 1 : 0;
+                default: return 0;
+            }
+        }
+
+        function drawTab4Canvases() {
+            const size = matrixSize;
+
+            const cRaw = document.getElementById('canvas-mask-raw');
+            if (cRaw) {
+                const ctx = cRaw.getContext('2d');
+                const cellSize = cRaw.width / size;
+                ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cRaw.width, cRaw.height);
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        ctx.fillStyle = qrMatrix[r][c] === 1 ? "#0f172a" : "#ffffff";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+
+            const cPattern = document.getElementById('canvas-mask-pattern');
+            if (cPattern) {
+                const ctx = cPattern.getContext('2d');
+                const cellSize = cPattern.width / size;
+                ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cPattern.width, cPattern.height);
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const maskVal = getMaskValue(currentMaskIdx, r, c);
+                        ctx.fillStyle = maskVal === 1 ? "#0284c7" : "#ffffff";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+
+            const cFinal = document.getElementById('canvas-mask-final');
+            if (cFinal) {
+                const ctx = cFinal.getContext('2d');
+                const cellSize = cFinal.width / size;
+                ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cFinal.width, cFinal.height);
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (isFunctionModule[r][c]) {
+                            ctx.fillStyle = qrMatrix[r][c] === 1 ? "#0f172a" : "#ffffff";
+                        } else {
+                            const raw = qrMatrix[r][c];
+                            const mask = getMaskValue(currentMaskIdx, r, c);
+                            const xor = raw ^ mask;
+                            ctx.fillStyle = xor === 1 ? "#0f172a" : "#ffffff";
+                        }
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        /* ==========================================================================
+           8. TAB 5: STORY MODE ENGINE (EXPANDED 6 RICH CHAPTERS)
+           ========================================================================== */
+        const storyData = [
+            {
+                ch: 1,
+                title: "Chương 1: Cuộc Khủng Hoảng 10 Mã Vạch Tại Xưởng Toyota (1994)",
+                icon: "🏭📜",
+                desc: "Năm 1994, tại nhà máy sản xuất linh kiện ô tô Denso (thuộc tập đoàn Toyota, Nhật Bản), hàng ngàn xe ô tô rời dây chuyền mỗi ngày. Công nhân phải dán tới 10 mã vạch 1D truyền thống lên mỗi linh kiện và quét từng cái một. Cổ tay họ mỏi nhừ, hàng dài xe bị tắc nghẽn!",
+                engineerNote: "Mã vạch 1D cũ chỉ mã hóa theo chiều ngang, lưu tối đa 20 ký tự. Khi thông tin linh kiện tăng lên, người ta buộc phải xếp dán hàng đống mã vạch dính liền nhau!",
+                techFact: "Cơ chế 1D chỉ dùng chiều ngang. Muốn chứa thêm thông tin, mã vạch phải dài ra vô tận!",
+                recordNumber: "20 Ký tự (Giới hạn tối đa mã vạch 1D cũ)",
+                quiz: {
+                    q: "Tại sao công nhân Toyota lại bị đau mỏi tay khi quét mã vạch 1D cũ?",
+                    options: ["A. Súng quét mã quá nặng", "B. Mỗi hộp linh kiện phải dán tới 10 mã vạch và quét từng cái", "C. Mã vạch bị mờ không quét được"],
+                    correct: 1,
+                    explain: "Chính xác! Do mã vạch 1D lưu quá ít thông tin nên người ta phải dán hàng đống mã vạch trên một sản phẩm."
+                }
+            },
+            {
+                ch: 2,
+                title: "Chương 2: Ý Tưởng Lịch Sử Từ Bàn Cờ Vây Lớn",
+                icon: "⬛⬜♟️",
+                desc: "Kỹ sư Masahiro Hara được giao nhiệm vụ tạo ra loại mã mới. Trong một giờ nghỉ trưa, khi ngồi quan sát các quân cờ đen trắng đan xen trên bàn Cờ Vây (Go), ông nảy ra ý tưởng thiên tài: 'Tại sao lại chỉ lưu dữ liệu theo 1 chiều ngang? Nếu lưu theo cả chiều HÀNG NGANG và CỘT DỌC như bàn cờ, ta sẽ chứa được gấp hàng trăm lần thông tin!'",
+                engineerNote: "Ý tưởng ma trận 2D ra đời! Bàn cờ vây 19x19 đã mở đường cho ma trận ô vuông lưu trữ toàn bộ dữ liệu chữ cái, con số và hình ảnh.",
+                techFact: "Mã QR Code 2D có thể chứa tới 7.089 số hoặc 4.296 chữ cái – gấp 350 lần mã vạch 1D!",
+                recordNumber: "7.089 Chữ Số (Gấp 350 lần mã vạch cũ)",
+                quiz: {
+                    q: "Kỹ sư Masahiro Hara đã nghĩ ra ý tưởng mã QR 2D từ trò chơi nào?",
+                    options: ["A. Cờ Vua", "B. Cờ Vây (Go)", "C. Trò chơi Đô-mi-nô"],
+                    correct: 1,
+                    explain: "Đúng rồi! Những quân cờ đen trắng xếp theo hàng và cột trên bàn Cờ Vây chính là cảm hứng tạo nên ma trận mã QR!"
+                }
+            },
+            {
+                ch: 3,
+                title: "Chương 3: Bí Mật Tỷ Lệ Vàng 1:1:3:1:1 Nhận Diện 360 Độ",
+                icon: "🎯📐",
+                desc: "Thử thách lớn nhất là làm sao để máy ảnh nhận ra đâu là mã QR giữa hàng ngàn dòng chữ trên tờ báo hay vỏ hộp carton. Đội ngũ của ông Hara đã dành hàng tháng trời quét hàng ngàn tờ tạp chí, bao bì để tìm tỷ lệ độ rộng đen-trắng ít xuất hiện nhất trong tự nhiên.",
+                engineerNote: "Kết quả kinh ngạc: Tỷ lệ độ rộng 1 : 1 : 3 : 1 : 1 của 3 ô vuông góc (Finder Patterns) là duy nhất trong thế giới in ấn! Nhờ tỷ lệ này, máy ảnh quét mã QR đúng chiều 360 độ chỉ trong 0.03 giây!",
+                techFact: "Dù bé cầm điện thoại nghiêng, chụp ngược hay chụp từ xa, 3 ô vuông định vị giúp máy tính định hướng ngay tức khắc.",
+                recordNumber: "0.03 Giây (Tốc độ nhận diện kỷ lục)",
+                quiz: {
+                    q: "Tỷ lệ độ rộng đen-trắng đặc biệt nào giúp camera phát hiện ô định vị mã QR?",
+                    options: ["A. Tỷ lệ 1 : 2 : 3 : 2 : 1", "B. Tỷ lệ 1 : 1 : 3 : 1 : 1", "C. Tỷ lệ 2 : 2 : 2 : 2 : 2"],
+                    correct: 1,
+                    explain: "Chính xác! Tỷ lệ 1:1:3:1:1 là bí mật giúp máy quét nhận diện mã QR 360 độ cực nhanh."
+                }
+            },
+            {
+                ch: 4,
+                title: "Chương 4: Lớp Giáp Bảo Vệ Từ Tàu Vũ Trụ NASA",
+                icon: "🚀🛡️",
+                desc: "Trong môi trường xưởng máy đầy dầu mỡ, mã QR rất dễ bị dính bẩn hoặc trầy xước. Để khắc phục, các kỹ sư đã tích hợp thuật toán sửa lỗi Reed-Solomon – thuật toán toán học vốn được NASA dùng để truyền ảnh từ các tàu vũ trụ Voyager cách Trái Đất hàng tỷ km!",
+                engineerNote: "Với cơ chế này, mã QR bổ sung thêm các byte bảo vệ dự phòng. Khi bị dính bùn hay rách tới 30% diện tích, máy quét vẫn khôi phục chính xác 100% dữ liệu!",
+                techFact: "Cơ chế Reed-Solomon giúp dán logo, biểu tượng công ty vào chính giữa mã QR mà không hề làm mất thông điệp.",
+                recordNumber: "30% Diện Tích (Khả năng tự phục hồi khi bị hỏng)",
+                quiz: {
+                    q: "Nhờ thuật toán Reed-Solomon của NASA, mã QR bị rách bao nhiêu % vẫn đọc được?",
+                    options: ["A. Tối đa 5%", "B. Tối đa 30%", "C. Phải nguyên vẹn 100% mới đọc được"],
+                    correct: 1,
+                    explain: "Tuyệt vời! Mã QR có thể tự sửa lỗi ngay cả khi bị mất hoặc bẩn tới 30% diện tích."
+                }
+            },
+            {
+                ch: 5,
+                title: "Chương 5: Món Quà Bản Quyền 0 Đồng Cho Nhân Loại",
+                icon: "🎁🌍",
+                desc: "Sau khi đăng ký bản quyền phát minh mã QR (viết tắt của Quick Response - Phản Hồi Nhanh), công ty Denso Wave đã đưa ra quyết định vĩ đại: Tặng miễn phí bản quyền sử dụng mã QR cho toàn bộ nhân loại mà không thu bất kỳ một đồng phí nào!",
+                engineerNote: "Nhờ tinh thần cống hiến STEM cao đẹp đó, mã QR đã bùng nổ toàn cầu, trở thành hạ tầng công nghệ thiết yếu cho thanh toán không tiền mặt, vé máy bay, tem y tế và học tập.",
+                techFact: "Từ 'QR' là viết tắt của 'Quick Response' - nghĩa là Phản Hồi Nhanh Tức Thì!",
+                recordNumber: "0 Đồng (Giá phí bản quyền phát minh mã QR)",
+                quiz: {
+                    q: "Tên gọi 'QR Code' là viết tắt của từ tiếng Anh nào?",
+                    options: ["A. Quick Response (Phản Hồi Nhanh)", "B. Quality Reader (Máy Đọc Chất Lượng)", "C. Question Record (Hồ Sơ Câu Hỏi)"],
+                    correct: 0,
+                    explain: "Chính xác! QR là viết tắt của Quick Response - máy quét đọc thông tin nhanh tức thì!"
+                }
+            },
+            {
+                ch: 6,
+                title: "Chương 6: Kỷ Nguyên 4.0 & QR Trong Tương Lai STEM",
+                icon: "🤖🔮",
+                desc: "Ngày nay, mã QR không chỉ xuất hiện trên bao bì thực phẩm mà còn có mặt trên kính thực tế ảo AR, tem chống hàng giả sinh học, kết nối Wi-Fi tự động và thanh toán siêu tốc bằng chuyển khoản ngân hàng. Trong tương lai, mã QR màu sắc và QR thông minh sẽ mở ra kỷ nguyên robot tự hành!",
+                engineerNote: "Các thám tử nhí STEM hôm nay hoàn toàn có thể tự tạo mã QR nghệ thuật (QR Art), lập trình robot tự quét mã QR để đi qua mê cung!",
+                techFact: "Mã QR động (Dynamic QR) cho phép đổi nội dung liên kết bất kỳ lúc nào mà không cần in lại mã mới.",
+                recordNumber: "10 Tỷ+ Lượt Quét Mỗi Ngày Trên Toàn Thế Giới",
+                quiz: {
+                    q: "Mã QR Động (Dynamic QR) có ưu điểm vượt trội gì?",
+                    options: ["A. Tự đổi màu liên tục", "B. Cho phép thay đổi nội dung trang web mà không cần in lại mã QR mới", "C. Tự phát ra tiếng nhạc"],
+                    correct: 1,
+                    explain: "Đúng rồi! Mã QR Động rất tiện lợi vì người dùng có thể đổi đường link liên kết bất cứ lúc nào."
+                }
+            }
+        ];
+
+        let visitedChapters = new Set([1]);
+
+        function selectStoryChapter(chNum) {
+            sound.playClick();
+            visitedChapters.add(chNum);
+
+            for (let i = 1; i <= 6; i++) {
+                const btn = document.getElementById(`story-btn-${i}`);
+                if (btn) {
+                    btn.className = (i === chNum)
+                        ? "story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-slate-950 shadow"
+                        : "story-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700";
+                }
+            }
+
+            const data = storyData[chNum - 1];
+            const container = document.getElementById('story-chapter-container');
+            if (container && data) {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                        <!-- Left Hero Card -->
+                        <div class="md:col-span-4 flex flex-col items-center justify-center p-6 bg-slate-950 rounded-3xl border border-amber-500/30 text-center space-y-3 shadow-xl">
+                            <span class="text-6xl animate-bounce">${data.icon}</span>
+                            <span class="px-3 py-1 rounded-full bg-amber-950 text-amber-300 font-bold text-xs border border-amber-500/40">Chương ${data.ch} / 6</span>
+                            
+                            <div class="p-3 rounded-2xl bg-slate-900 border border-slate-800 w-full space-y-1">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase block">Kỷ Lục Nổi Bật:</span>
+                                <p class="text-xs font-bold text-emerald-400 font-mono">${data.recordNumber}</p>
+                            </div>
+                        </div>
+
+                        <!-- Right Detail Content -->
+                        <div class="md:col-span-8 space-y-4">
+                            <h3 class="text-base md:text-lg font-black text-amber-300">${data.title}</h3>
+                            <p class="text-xs text-slate-200 leading-relaxed bg-slate-950/60 p-4 rounded-2xl border border-slate-800">${data.desc}</p>
+                            
+                            <!-- Engineer Note Card -->
+                            <div class="p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/40 space-y-1">
+                                <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                                    <span>👨‍💻</span> Nhật Ký Kỹ Sư Masahiro Hara:
+                                </span>
+                                <p class="text-xs text-slate-300 italic">${data.engineerNote}</p>
+                            </div>
+
+                            <!-- Tech Fact -->
+                            <div class="p-3 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-xs font-bold text-amber-300 flex items-center gap-2">
+                                <span>💡 Bí mật kỹ thuật:</span>
+                                <span>${data.techFact}</span>
+                            </div>
+
+                            <!-- Mini Quiz Challenge -->
+                            <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+                                <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                                    <span>❓</span> Thử Thách Nhanh Chương ${data.ch}:
+                                </span>
+                                <p class="text-xs font-bold text-slate-200">${data.quiz.q}</p>
+                                <div id="chapter-quiz-box-${data.ch}" class="grid grid-cols-1 gap-1.5 pt-1">
+                                    ${data.quiz.options.map((opt, idx) => `
+                                        <button onclick="answerChapterQuiz(${data.ch}, ${idx})" class="text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-bold text-slate-200 transition">
+                                            ${opt}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            checkAllBadges();
+        }
+
+        function answerChapterQuiz(chNum, optIdx) {
+            const data = storyData[chNum - 1];
+            const box = document.getElementById(`chapter-quiz-box-${chNum}`);
+            if (!box || !data) return;
+
+            if (optIdx === data.quiz.correct) {
+                sound.playFanfare();
+                triggerConfetti();
+                box.innerHTML = `
+                    <div class="p-3 rounded-xl bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs font-bold space-y-1">
+                        <p>🎉 Chính xác tuyệt đối!</p>
+                        <p class="text-[11px] font-normal text-slate-300">${data.quiz.explain}</p>
+                    </div>
+                `;
+            } else {
+                sound.playTone(300, 0.2, 'sawtooth');
+                box.innerHTML += `
+                    <p class="text-[11px] text-rose-400 font-bold mt-1">😅 Chưa đúng rồi, bé hãy thử chọn lại đáp án khác xem sao nhé!</p>
+                `;
+            }
+        }
+
+        /* ==========================================================================
+           9. TAB 6: MINI-GAMES & DETECTIVE BADGES ENGINE (ENHANCED CONTENT)
+           ========================================================================== */
+        let quizScore = 0;
+        let currentQuizIdx = 0;
+        
+        const quizQuestions = [
+            {
+                q: "1. Mã QR Code lưu trữ dữ liệu dưới dạng hình ảnh nào?",
+                options: ["A. Các đường vạch kẻ ngang 1D", "B. Ma trận lưới ô vuông đen trắng 2D", "C. Các vòng tròn đồng tâm"],
+                correct: 1,
+                explain: "Đúng rồi! Mã QR là ma trận 2D gồm vô số ô vuông đen trắng đại diện cho bit 0 và 1."
+            },
+            {
+                q: "2. 3 ô vuông lớn ở 3 góc (Finder Patterns) có nhiệm vụ quan trọng gì?",
+                options: ["A. Định vị vị trí & xoay mã QR 360 độ chuẩn xác", "B. Trang trí cho mã QR đẹp mắt", "C. Thay đổi màu sắc của mã QR"],
+                correct: 0,
+                explain: "Chính xác! 3 ô định vị giúp camera biết hướng xoay mã 360 độ ngay lập tức."
+            },
+            {
+                q: "3. Tỷ lệ độ rộng đặc biệt 1:1:3:1:1 của ô định vị có ưu điểm gì?",
+                options: ["A. Không bao giờ bị nhầm lẫn với văn bản in ấn thông thường", "B. Làm cho mã QR quét chậm hơn", "C. Tiết kiệm mực in"],
+                correct: 0,
+                explain: "Tuyệt vời! Tỷ lệ 1:1:3:1:1 duy nhất trong tự nhiên giúp máy quét nhận diện chỉ trong 0.03s."
+            },
+            {
+                q: "4. Cơ chế Sửa Lỗi Reed-Solomon giúp mã QR có khả năng gì?",
+                options: ["A. Tự sửa lỗi và đọc đúng ngay cả khi mã bị rách bẩn tới 30%", "B. Tự đổi nội dung chữ cái", "C. Tự động kết nối Wi-Fi không cần mật khẩu"],
+                correct: 0,
+                explain: "Chính xác! Thuật toán Reed-Solomon giúp khôi phục dữ liệu bị mất cực kỳ thông minh."
+            },
+            {
+                q: "5. Lớp Mặt Nạ XOR (Mask Patterns) được dùng để làm gì?",
+                options: ["A. Trộn đều các ô đen trắng, tránh làm camera lóa mắt", "B. Ẩn mã QR không cho ai quét", "C. Đổi phông chữ"],
+                correct: 0,
+                explain: "Đúng rồi! Phép XOR mặt nạ ngăn ngừa việc các đốm đen bị dính chùm gây chói ống kính."
+            },
+            {
+                q: "6. Thước đo thời gian (Timing Patterns) nằm ở vị trí nào trên mã QR?",
+                options: ["A. Hàng 6 và Cột 6", "B. Ở chính giữa mã QR", "C. Ở 4 góc bên ngoài"],
+                correct: 0,
+                explain: "Chính xác! Dải caro đen trắng ở Hàng 6 & Cột 6 giúp camera tính tọa độ lưới ô vuông."
+            },
+            {
+                q: "7. Các ô nhỏ 5x5 (Alignment Patterns) giúp ích gì khi dán mã QR lên chai nước?",
+                options: ["A. Căn thẳng hình ảnh khi bề mặt bị cong hoặc nhăn", "B. Tự phát ra ánh sáng neon", "C. Lưu mật khẩu bí mật"],
+                correct: 0,
+                explain: "Tuyệt vời! Ô căn chỉnh 5x5 giúp ống kính nắn thẳng mã QR trên bề mặt uốn cong."
+            },
+            {
+                q: "8. Công ty Denso Wave đã làm gì với bản quyền phát minh mã QR?",
+                options: ["A. Bán với giá rất đắt", "B. Tặng miễn phí bản quyền 0$ cho toàn thế giới", "C. Giữ bí mật không cho ai dùng"],
+                correct: 1,
+                explain: "Đúng vậy! Denso Wave đã tặng miễn phí bản quyền mã QR giúp cả thế giới cùng phát triển!"
+            }
+        ];
+
+        // Binary Target Switch Game
+        const targetMissions = [
+            { char: 'Q', ascii: 81, desc: "Tạo chữ 'Q' (Mã ASCII 81 = 64 + 16 + 1)", bits: [0, 1, 0, 1, 0, 0, 0, 1] },
+            { char: 'R', ascii: 82, desc: "Tạo chữ 'R' (Mã ASCII 82 = 64 + 16 + 2)", bits: [0, 1, 0, 1, 0, 0, 1, 0] },
+            { char: 'S', ascii: 83, desc: "Tạo chữ 'S' (Mã ASCII 83 = 64 + 16 + 2 + 1)", bits: [0, 1, 0, 1, 0, 0, 1, 1] },
+            { char: '!', ascii: 33, desc: "Tạo dấu '!' (Mã ASCII 33 = 32 + 1)", bits: [0, 0, 1, 0, 0, 0, 0, 1] },
+            { char: '9', ascii: 57, desc: "Tạo số '9' (Mã ASCII 57 = 32 + 16 + 8 + 1)", bits: [0, 0, 1, 1, 1, 0, 0, 1] }
+        ];
+
+        let currentMissionIdx = 0;
+        let switchBits = [0, 1, 0, 0, 0, 0, 0, 1]; // Current switches
+        let completedMissions = 0;
+
+        function initGameTab() {
+            renderQuiz();
+            renderTargetMission();
+            renderSwitches();
+            checkAllBadges();
+        }
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            if (!container) return;
+
+            const progress = (currentQuizIdx / quizQuestions.length) * 100;
+            const progressBar = document.getElementById('quiz-progress-bar');
+            if (progressBar) progressBar.style.width = `${progress}%`;
+
+            const q = quizQuestions[currentQuizIdx];
+            if (!q) {
+                container.innerHTML = `
+                    <div class="p-6 text-center space-y-3 bg-slate-950 rounded-2xl border-2 border-emerald-500 shadow-xl">
+                        <span class="text-5xl animate-bounce inline-block">🏆</span>
+                        <h3 class="text-base font-black text-emerald-400 uppercase">CHÚC MỪNG BÉ HOÀN THÀNH XUẤT SẮC!</h3>
+                        <p class="text-xs text-slate-200">Điểm số trắc nghiệm STEM của bé: <strong class="text-amber-300 font-mono text-sm">${quizScore} / 100 điểm</strong>.</p>
+                        <button onclick="resetQuiz()" class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow">
+                            🔄 Thử Thách Lại
+                        </button>
+                    </div>
+                `;
+                checkAllBadges();
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between text-xs font-bold">
+                        <span class="text-amber-300">Câu ${currentQuizIdx + 1} / ${quizQuestions.length}:</span>
+                        <span class="text-slate-400 font-mono">12.5 điểm / câu</span>
+                    </div>
+                    <p class="text-xs md:text-sm font-bold text-slate-100 bg-slate-950 p-3 rounded-2xl border border-slate-800">${q.q}</p>
+
+                    <div id="quiz-options-box" class="space-y-2 pt-1">
+                        ${q.options.map((opt, idx) => `
+                            <button onclick="answerQuiz(${idx})" class="w-full text-left p-3 rounded-2xl bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-cyan-400 text-xs font-bold text-slate-200 transition flex items-center justify-between">
+                                <span>${opt}</span>
+                                <span class="text-slate-500 text-[10px]">▶</span>
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function answerQuiz(optionIdx) {
+            const q = quizQuestions[currentQuizIdx];
+            const box = document.getElementById('quiz-options-box');
+            if (!q || !box) return;
+
+            if (optionIdx === q.correct) {
+                sound.playFanfare();
+                triggerConfetti();
+                quizScore += 12.5;
+                document.getElementById('quiz-score-badge').innerText = `Điểm: ${Math.round(quizScore)} / 100`;
+                
+                box.innerHTML = `
+                    <div class="p-3.5 rounded-2xl bg-emerald-950 border border-emerald-500 text-emerald-300 text-xs font-bold space-y-1">
+                        <p>🎉 Chính xác tuyệt đối! (+12.5 điểm)</p>
+                        <p class="text-[11px] font-normal text-slate-200">${q.explain}</p>
+                    </div>
+                `;
+            } else {
+                sound.playTone(300, 0.2, 'sawtooth');
+                box.innerHTML = `
+                    <div class="p-3.5 rounded-2xl bg-rose-950 border border-rose-800 text-rose-300 text-xs font-bold space-y-1">
+                        <p>😅 Rất tiếc, chưa chính xác!</p>
+                        <p class="text-[11px] font-normal text-slate-200">${q.explain}</p>
+                    </div>
+                `;
+            }
+
+            currentQuizIdx++;
+            checkAllBadges();
+            setTimeout(renderQuiz, 1600);
+        }
+
+        function resetQuiz() {
+            quizScore = 0;
+            currentQuizIdx = 0;
+            document.getElementById('quiz-score-badge').innerText = `Điểm: 0 / 100`;
+            renderQuiz();
+        }
+
+        function renderTargetMission() {
+            const m = targetMissions[currentMissionIdx];
+            if (!m) return;
+
+            document.getElementById('mission-step-badge').innerText = `Nhiệm vụ ${currentMissionIdx + 1}/${targetMissions.length}`;
+            document.getElementById('target-mission-desc').innerText = m.desc;
+            document.getElementById('target-mission-char').innerText = `'${m.char}'`;
+        }
+
+        function renderSwitches() {
+            const row = document.getElementById('switches-row');
+            if (!row) return;
+            row.innerHTML = '';
+
+            switchBits.forEach((bit, idx) => {
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    sound.playClick();
+                    switchBits[idx] = switchBits[idx] === 1 ? 0 : 1;
+                    renderSwitches();
+                };
+
+                btn.className = bit === 1 
+                    ? "py-3 rounded-2xl font-mono font-black text-sm bg-gradient-to-b from-cyan-400 to-blue-500 text-slate-950 shadow-lg glow-cyan border-2 border-white scale-102 transition-all"
+                    : "py-3 rounded-2xl font-mono font-black text-sm bg-slate-950 text-slate-500 border border-slate-800 hover:border-slate-700 transition-all";
+                btn.innerText = bit;
+                row.appendChild(btn);
+            });
+
+            const ascii = parseInt(switchBits.join(''), 2);
+            const char = (ascii >= 32 && ascii <= 126) ? String.fromCharCode(ascii) : '❓';
+            document.getElementById('switch-converted-char').innerText = `'${char}' (Mã ASCII: ${ascii})`;
+        }
+
+        function checkTargetMission() {
+            const m = targetMissions[currentMissionIdx];
+            if (!m) return;
+
+            const currentAscii = parseInt(switchBits.join(''), 2);
+
+            if (currentAscii === m.ascii) {
+                sound.playFanfare();
+                triggerConfetti();
+                completedMissions++;
+
+                if (currentMissionIdx < targetMissions.length - 1) {
+                    currentMissionIdx++;
+                    renderTargetMission();
+                    setRobotSpeech(`🎉 Giỏi quá! Bé đã tạo đúng chữ '${m.char}'. Tiếp tục nhiệm vụ ${currentMissionIdx + 1} nhé!`);
+                } else {
+                    setRobotSpeech(`🏆 Hoan hô! Bé đã hoàn thành tất cả thử thách gạt bit nhị phân!`);
+                }
+            } else {
+                sound.playTone(300, 0.2, 'sawtooth');
+                setRobotSpeech(`😅 Chưa khớp rồi! Mã mục tiêu là ${m.ascii}, mã bé tạo ra đang là ${currentAscii}. Thử lại nhé!`);
+            }
+
+            checkAllBadges();
+        }
+
+        function checkAllBadges() {
+            let unlockedCount = 0;
+
+            // Badge 1: Soi bit
+            if (bitPlacementCoords.length > 0) {
+                unlockBadgeUI('badge-1');
+                unlockedCount++;
+            }
+
+            // Badge 2: Khám phá vùng QR
+            if (activeQRRegion !== '') {
+                unlockBadgeUI('badge-2');
+                unlockedCount++;
+            }
+
+            // Badge 3: Đọc đủ 6 chương truyện
+            if (visitedChapters.size >= 6) {
+                unlockBadgeUI('badge-3');
+                unlockedCount++;
+            }
+
+            // Badge 4: Thắng game gạt bit
+            if (completedMissions >= 1) {
+                unlockBadgeUI('badge-4');
+                unlockedCount++;
+            }
+
+            // Badge 5: Đạt 80+ điểm quiz
+            if (quizScore >= 80) {
+                unlockBadgeUI('badge-5');
+                unlockedCount++;
+            }
+
+            // Badge 6: Tất cả huy hiệu
+            if (unlockedCount >= 5) {
+                unlockBadgeUI('badge-6');
+                unlockedCount = 6;
+            }
+
+            const countText = document.getElementById('badge-count-text');
+            if (countText) countText.innerText = `${unlockedCount} / 6 Huy Hiệu`;
+        }
+
+        function unlockBadgeUI(badgeId) {
+            const b = document.getElementById(badgeId);
+            if (b) {
+                b.className = "p-3 rounded-2xl bg-slate-900 border-2 border-emerald-400 text-emerald-300 font-bold scale-105 shadow-lg glow-emerald transition-all opacity-100";
+            }
+        }
+
+        /* ==========================================================================
+           10. WINDOW ONLOAD INIT
+           ========================================================================== */
+        window.onload = function() {
+            onInputTextChange();
+            switchTab(1);
+        };
+    </script>
+</body>
+</html>
